@@ -1,207 +1,182 @@
---[[ 🔥 Synixz Hub - Roblox Script 🔥
-Desenvolvido por: Synixz
-Discord: discord.gg/seulink
-]]--
+-- Synixz Hub - Estilo Chilli Hub com tema preto
+-- Desenvolvido por Synixz
+-- Discord: discord.gg/seulink
 
-repeat wait() until game.Players.LocalPlayer and game.Players.LocalPlayer.Character
+repeat wait() until game:IsLoaded()
+
 local plr = game.Players.LocalPlayer
-local char = plr.Character
-local humanoid = char:WaitForChild("Humanoid")
+local char = plr.Character or plr.CharacterAdded:Wait()
+local hum = char:WaitForChild("Humanoid")
 
--- GUI
-local gui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
-gui.Name = "SynixzHubGui"
+-- Estados
+local antiHit, antiLaser, flyMode, invis, speedOn = false, false, false, false, false
 
--- Função de botão
-function makeBtn(txt, y, func)
-    local btn = Instance.new("TextButton", gui)
-    btn.Size = UDim2.new(0, 250, 0, 30)
-    btn.Position = UDim2.new(0.5, -125, 0, y)
-    btn.Text = txt
-    btn.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
-    btn.TextColor3 = Color3.new(1, 1, 1)
-    btn.Font = Enum.Font.Gotham
-    btn.TextSize = 14
-    btn.MouseButton1Click:Connect(func)
-end
+-- Criar botão flutuante (ícone)
+local starterGui = game:GetService("StarterGui")
+local gui = Instance.new("ScreenGui", game.CoreGui)
+gui.Name = "SynixzHub"
+gui.ResetOnSpawn = false
 
--- Anti-Hit
-local antihitOn = false
-function toggleAntiHit()
-    antihitOn = not antihitOn
-    if antihitOn then
-        humanoid:GetPropertyChangedSignal("Health"):Connect(function()
-            if humanoid.Health < humanoid.MaxHealth then
-                humanoid.Health = humanoid.MaxHealth
-            end
-        end)
-    end
-end
+local toggleBtn = Instance.new("ImageButton", gui)
+toggleBtn.Name = "OpenCloseButton"
+toggleBtn.Size = UDim2.new(0, 45, 0, 45)
+toggleBtn.Position = UDim2.new(0, 10, 0.5, -30)
+toggleBtn.BackgroundTransparency = 1
+toggleBtn.Image = "http://www.roblox.com/asset/?id=6031091002" -- ícone (ninja)
 
--- Anti-Laser
-local antilaserOn = false
-function toggleAntiLaser()
-    antilaserOn = not antilaserOn
-    if antilaserOn then
-        for _, v in pairs(workspace:GetDescendants()) do
-            if v:IsA("BasePart") and v.Name:lower():find("kill") then
-                v.CanTouch = false
-                v.CanCollide = false
-                v.Transparency = 0.5
-            end
+-- Criar interface principal
+local main = Instance.new("Frame", gui)
+main.Name = "MainFrame"
+main.Size = UDim2.new(0, 400, 0, 320)
+main.Position = UDim2.new(0.5, -200, 0.5, -160)
+main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+main.Visible = false
+main.Active = true
+main.Draggable = true
+
+-- Abas
+local tabs = {
+    "Main",
+    "Player",
+    "Teleport",
+    "Extras",
+    "Créditos"
+}
+
+local tabFrames = {}
+
+local tabBar = Instance.new("Frame", main)
+tabBar.Size = UDim2.new(1, 0, 0, 40)
+tabBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+
+for i, tabName in ipairs(tabs) do
+    local tabBtn = Instance.new("TextButton", tabBar)
+    tabBtn.Size = UDim2.new(0, 80, 1, 0)
+    tabBtn.Position = UDim2.new(0, (i - 1) * 80, 0, 0)
+    tabBtn.Text = tabName
+    tabBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    tabBtn.TextColor3 = Color3.new(1, 1, 1)
+    tabBtn.Font = Enum.Font.GothamBold
+    tabBtn.TextSize = 14
+
+    local content = Instance.new("Frame", main)
+    content.Size = UDim2.new(1, 0, 1, -40)
+    content.Position = UDim2.new(0, 0, 0, 40)
+    content.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    content.Visible = i == 1
+    tabFrames[tabName] = content
+
+    tabBtn.MouseButton1Click:Connect(function()
+        for _, frame in pairs(tabFrames) do
+            frame.Visible = false
         end
-    end
-end
-
--- Fly
-function enableFly()
-    local bp = Instance.new("BodyPosition", char.HumanoidRootPart)
-    bp.Position = char.HumanoidRootPart.Position
-    bp.MaxForce = Vector3.new(99999, 99999, 99999)
-end
-
--- Invisível
-function becomeInvisible()
-    for _, p in pairs(char:GetChildren()) do
-        if p:IsA("BasePart") then
-            p.Transparency = 1
-        end
-    end
-end
-
--- Teleportar pro lobby
-function teleportToLobby()
-    char:MoveTo(Vector3.new(0, 100, 0))
-end
-
--- Auto Farm
-local function autoFarm()
-    spawn(function()
-        while true do
-            for _, v in pairs(workspace:GetDescendants()) do
-                if v:IsA("TouchTransmitter") then
-                    firetouchinterest(char.HumanoidRootPart, v.Parent, 0)
-                    firetouchinterest(char.HumanoidRootPart, v.Parent, 1)
-                end
-            end
-            wait(2)
-        end
+        content.Visible = true
     end)
 end
 
--- ESP
-local function enableESP()
-    for _, player in pairs(game.Players:GetPlayers()) do
-        if player ~= plr and player.Character and player.Character:FindFirstChild("Head") then
-            local billboard = Instance.new("BillboardGui", player.Character.Head)
-            billboard.Size = UDim2.new(0, 100, 0, 40)
-            billboard.StudsOffset = Vector3.new(0, 3, 0)
-            billboard.AlwaysOnTop = true
-            local label = Instance.new("TextLabel", billboard)
-            label.Size = UDim2.new(1, 0, 1, 0)
-            label.Text = player.Name
-            label.TextColor3 = Color3.new(1, 0, 0)
-            label.BackgroundTransparency = 1
-        end
-    end
+-- Função criar botão em aba
+local function addButton(tab, name, callback)
+    local btn = Instance.new("TextButton", tabFrames[tab])
+    btn.Size = UDim2.new(0, 200, 0, 30)
+    btn.Position = UDim2.new(0, 10, 0, #tabFrames[tab]:GetChildren() * 35)
+    btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 14
+    btn.Text = name
+    btn.MouseButton1Click:Connect(callback)
 end
 
--- Teleport para outro jogador
-local function teleportToPlayer(targetName)
-    local target = game.Players:FindFirstChild(targetName)
-    if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-        plr.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame + Vector3.new(0, 5, 0)
-    end
-end
-
--- AntiCheat simples
-local function basicBypass()
-    for _, v in pairs(game:GetDescendants()) do
-        if v:IsA("LocalScript") and v.Name:lower():find("anticheat") then
-            v:Destroy()
-        end
-    end
-end
-
--- === ANTIBAN ===
-local mt = getrawmetatable(game)
-setreadonly(mt, false)
-local old = mt.__namecall
-
-mt.__namecall = newcclosure(function(self, ...)
-    if tostring(self) == "Kick" or getnamecallmethod() == "Kick" then
-        warn("[Synixz AntiBan] Kick bloqueado!")
-        return
-    end
-    return old(self, ...)
-end)
-
-for _, v in pairs(game:GetDescendants()) do
-    if v:IsA("LocalScript") and string.match(v.Name:lower(), "anticheat") then
-        v:Destroy()
-    end
-end
-
-local function protectHumanoid()
-    local human = plr.Character:FindFirstChildOfClass("Humanoid")
-    if human then
-        human.BreakJointsOnDeath = false
-        human:GetPropertyChangedSignal("Health"):Connect(function()
-            if human.Health <= 5 then
-                human.Health = human.MaxHealth
+-- Botões principais
+addButton("Main", "🛡️ Anti-Hit", function()
+    antiHit = not antiHit
+    if antiHit then
+        print("[Synixz] Anti-Hit ativado")
+        spawn(function()
+            while antiHit and hum and hum.Health do
+                if hum.Health < hum.MaxHealth then
+                    hum.Health = hum.MaxHealth
+                end
+                wait(0.2)
             end
         end)
-    end
-end
-protectHumanoid()
-
-game:GetService("LogService").MessageOut:Connect(function(msg)
-    if string.find(msg:lower(), "ban") or string.find(msg:lower(), "log") then
-        warn("[Synixz AntiBan] Log suspeito:", msg)
+    else
+        print("[Synixz] Anti-Hit desativado")
     end
 end)
 
--- === SPEED SYSTEM ===
+addButton("Main", "💥 Anti-Laser", function()
+    antiLaser = not antiLaser
+    if antiLaser then
+        print("[Synixz] Anti-Laser ativado")
+        spawn(function()
+            while antiLaser do
+                for _, p in pairs(char:GetDescendants()) do
+                    if p:IsA("BasePart") then
+                        p.CanCollide = false
+                        p.Touched:Connect(function(hit)
+                            if hit.Name:lower():find("laser") or hit.Name:lower():find("kill") then
+                                hum.Health = hum.MaxHealth
+                            end
+                        end)
+                    end
+                end
+                wait(0.3)
+            end
+        end)
+    else
+        print("[Synixz] Anti-Laser desativado")
+    end
+end)
 
--- Speed simples
-local speedOn = false
-function toggleSpeedSimple()
+addButton("Player", "🕊️ Ativar Fly", function()
+    flyMode = not flyMode
+    if flyMode then
+        local bp = Instance.new("BodyPosition", char.HumanoidRootPart)
+        bp.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+        spawn(function()
+            while flyMode and bp do
+                bp.Position = char.HumanoidRootPart.Position + Vector3.new(0, 5, 0)
+                wait()
+            end
+            bp:Destroy()
+        end)
+    end
+end)
+
+addButton("Player", "⚡ Speed x3", function()
     speedOn = not speedOn
     if speedOn then
-        humanoid.WalkSpeed = 100
+        hum.WalkSpeed = 48
     else
-        humanoid.WalkSpeed = 16
+        hum.WalkSpeed = 16
     end
-end
+end)
 
--- Speed Tween seguro
-function tweenSpeedTo(pos)
-    local ts = game:GetService("TweenService")
-    local hrp = char:WaitForChild("HumanoidRootPart")
-    local goal = {CFrame = CFrame.new(pos)}
-    local info = TweenInfo.new(1, Enum.EasingStyle.Linear)
-    ts:Create(hrp, info, goal):Play()
-end
+addButton("Player", "👻 Invisibilidade", function()
+    invis = not invis
+    for _, part in pairs(char:GetDescendants()) do
+        if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+            part.Transparency = invis and 1 or 0
+        end
+    end
+end)
 
--- Botões
-makeBtn("🛡️ Anti-Hit", 50, toggleAntiHit)
-makeBtn("💥 Anti-Laser", 90, toggleAntiLaser)
-makeBtn("🚀 Teleportar para Lobby", 130, teleportToLobby)
-makeBtn("🕊️ Ativar Fly", 170, enableFly)
-makeBtn("👻 Invisibilidade", 210, becomeInvisible)
-makeBtn("⚡ Speed Simples", 250, toggleSpeedSimple)
-makeBtn("👁️ ESP Players", 290, enableESP)
-makeBtn("🤖 Auto Farm", 330, autoFarm)
-makeBtn("🔓 Bypass AC", 370, basicBypass)
+addButton("Teleport", "🚀 Teleportar para Lobby", function()
+    if char:FindFirstChild("HumanoidRootPart") then
+        char.HumanoidRootPart.CFrame = CFrame.new(0, 50, 0)
+    end
+end)
 
--- Mensagem
-local msg = Instance.new("TextLabel", gui)
-msg.Size = UDim2.new(0, 250, 0, 30)
-msg.Position = UDim2.new(0.5, -125, 0, 10)
-msg.BackgroundTransparency = 1
-msg.Text = "✅ Synixz Hub Iniciado!"
-msg.TextColor3 = Color3.new(0, 1, 0)
-msg.Font = Enum.Font.GothamBold
-msg.TextSize = 16
-wait(3)
-msg:Destroy()
+addButton("Créditos", "🌑 Synixz Hub", function()
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Synixz Hub",
+        Text = "Criado por Synixz • Tema Estilo Chilli",
+        Duration = 5
+    })
+end)
+
+-- Botão abre/fecha
+toggleBtn.MouseButton1Click:Connect(function()
+    main.Visible = not main.Visible
+end)
